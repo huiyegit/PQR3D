@@ -29,8 +29,8 @@ This is the official PyTorch implementation for our paper:
 Install PyTorch 2.0 + CUDA 11.8:
 
 ```
-conda create -n propbev python=3.8
-conda activate propbev
+conda create -n pqr3d python=3.8
+conda activate pqr3d
 conda install pytorch==2.0.0 torchvision==0.15.0 pytorch-cuda=11.8 -c pytorch -c nvidia
 ```
 
