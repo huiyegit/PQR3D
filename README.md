@@ -95,13 +95,13 @@ pretrain
 ├── cascade_mask_rcnn_r50_fpn_coco-20e_20e_nuim_20201009_124951-40963960.pth
 ```
 
-Train PropBEV with 8 GPUs:
+Train PQR3D with 8 GPUs:
 
 ```
 torchrun --nproc_per_node 8 train.py --config configs/r50_nuimg_704x256.py
 ```
 
-Train PropBEV with 4 GPUs (i.e the last four GPUs):
+Train PQR3D with 4 GPUs (i.e the last four GPUs):
 
 ```
 export CUDA_VISIBLE_DEVICES=4,5,6,7
