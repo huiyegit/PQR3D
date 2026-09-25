@@ -1,6 +1,6 @@
 _base_ = ['./r50_nuimg_704x256.py']
 
-num_frames = 15
+num_frames = 17
 
 # For nuScenes we usually do 10-class detection
 class_names = [
@@ -45,12 +45,14 @@ model = dict(
     img_backbone=img_backbone,
     img_neck=img_neck,
     # ── Temporal propagation ──
-    num_propgated=256,
+    num_propagated=256,
     use_t2=False,  # Disable t-2 keyframe to save memory with large backbone
     t1_slot=1,   # Interleaved: [curr, prev1, next1, prev2, ...] → t-1 at slot 1
     t2_slot=3,   # Interleaved: [curr, prev1, next1, prev2, ...] → t-2 at slot 3
     pts_bbox_head=dict(
         num_query=1600,
+        query_denoising=True,         # False disables DN entirely
+        query_denoising_groups=10,
         transformer=dict(
             num_levels=5,
             num_points=4,
@@ -70,7 +72,7 @@ ida_aug_conf = {
 
 train_pipeline = [
     dict(type='LoadMultiViewImageFromFiles', to_float32=False, color_type='color'),
-    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=7, next_sweeps_num=7),
+    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=8, next_sweeps_num=8),
     dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True, with_attr_label=False),
     dict(type='ObjectRangeFilter', point_cloud_range=point_cloud_range),
     dict(type='ObjectNameFilter', classes=class_names),
@@ -86,7 +88,7 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadMultiViewImageFromFiles', to_float32=False, color_type='color'),
-    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=7, next_sweeps_num=7, test_mode=True),
+    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=8, next_sweeps_num=8, test_mode=True),
     dict(type='RandomTransformImage', ida_aug_conf=ida_aug_conf, training=False),
     dict(
         type='MultiScaleFlipAug3D',
@@ -145,4 +147,4 @@ load_from = 'pretrain/dd3d_det_final.pth'
 revise_keys = None
 
 # evaluate every epoch
-eval_config = dict(interval=1)
+eval_config = dict(interval=4)

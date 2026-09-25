@@ -11,8 +11,8 @@ class_names = [
 point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
 voxel_size = [0.2, 0.2, 8]
 
-# ── 15-frame config: 7 past + 1 current + 7 future ──
-num_frames = 15
+# ── 17-frame config: 8 past + 1 current + 8 future ──
+num_frames = 17
 
 img_backbone = dict(
     _delete_=True,
@@ -41,7 +41,7 @@ img_backbone = dict(
     fpn_norm="LN",
     fpn_square_pad=1600,
     pretrained='pretrain/eva02_L_coco_seg_sys_o365.pth',
-    frozen_blocks=3,
+    frozen_blocks=6,
 )
 img_norm_cfg = dict(
     mean=[123.675, 116.280, 103.530],
@@ -52,6 +52,7 @@ img_norm_cfg = dict(
 model = dict(
     img_backbone=img_backbone,
     img_neck=None,
+    act_ckpt=True,
     # ── Temporal propagation (same as R50 base) ──
     num_propgated=256,
     t1_slot=1,   # Interleaved: [curr, prev1, next1, prev2, ...] → t-1 at slot 1
@@ -59,11 +60,11 @@ model = dict(
     use_t2=False, # Skip t-2 to save GPU memory for large backbone
     stop_prev_grad=4,
     pts_bbox_head=dict(
-        num_query=1296,
-        query_denoising_groups=5,
+        num_query=1024,
+        query_denoising_groups=10,
         transformer=dict(
             num_levels=5,
-            num_points=8,
+            num_points=6,
             num_frames=num_frames))
 )
 
@@ -78,8 +79,7 @@ ida_aug_conf = {
 
 train_pipeline = [
     dict(type='LoadMultiViewImageFromFiles', to_float32=False, color_type='color'),
-    # 7 past + 7 future sweeps → 15 total frames (15 × 6 = 90 images)
-    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=7, next_sweeps_num=7),
+    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=8, next_sweeps_num=8),
     dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True, with_attr_label=False),
     dict(type='ObjectRangeFilter', point_cloud_range=point_cloud_range),
     dict(type='ObjectNameFilter', classes=class_names),
@@ -95,7 +95,7 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadMultiViewImageFromFiles', to_float32=False, color_type='color'),
-    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=7, next_sweeps_num=7, test_mode=True),
+    dict(type='LoadMultiViewImageFromMultiSweepsFutureInterleave', prev_sweeps_num=8, next_sweeps_num=8, test_mode=True),
     dict(type='RandomTransformImage', ida_aug_conf=ida_aug_conf, training=False),
     dict(
         type='MultiScaleFlipAug3D',
@@ -148,10 +148,10 @@ lr_config = dict(
     min_lr_ratio=1e-3
 )
 
-
+total_epochs = 24
 
 load_from = None
 revise_keys = None
 
 # evaluate every epoch
-eval_config = dict(interval=1)
+eval_config = dict(interval=24)

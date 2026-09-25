@@ -1,6 +1,6 @@
 _base_ = ['./r50_nuimg_704x256.py']
 
-num_frames = 10
+num_frames = 9
 
 # For nuScenes we usually do 10-class detection
 class_names = [
@@ -29,7 +29,10 @@ img_neck = dict(
 model = dict(
     img_backbone=img_backbone,
     img_neck=img_neck,
-    pts_bbox_head=dict(transformer=dict(num_levels=5)),
+    pts_bbox_head=dict(transformer=dict(
+        num_levels=5,
+        num_frames=num_frames)),
+    aux_2d_min_box_size=8.0,
 )
 
 ida_aug_conf = {

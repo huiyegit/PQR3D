@@ -23,8 +23,8 @@ voxel_size = [0.2, 0.2, 8]
 # arch config
 embed_dims = 256
 num_layers = 6
-num_query = 900
-num_frames = 9  
+num_query = 625
+num_frames = 8  
 num_levels = 4
 num_points = 4
 
@@ -69,7 +69,7 @@ model = dict(
     num_propagated=256,  # Queries propagated sequentially: t-2 → t-1 → t (only t-1 predictions sent to t)
     t1_slot=1,   # Past-only: [curr, prev1, prev2, prev3, ...] → t-1 at slot 1
     t2_slot=2,   # Past-only: [curr, prev1, prev2, prev3, ...] → t-2 at slot 2
-    use_t2=True, # Use t-2 keyframe (set False for large backbones to save memory)
+    use_t2=False, # Use t-2 keyframe (set False for large backbones to save memory)
     img_backbone=img_backbone,
     img_neck=img_neck,
     # <<< FocalHead: auxiliary dense 2D supervision on the 6 current-frame
@@ -111,7 +111,7 @@ model = dict(
         in_channels=embed_dims,
         num_query=num_query,
         query_denoising=True,
-        query_denoising_groups=10,
+        query_denoising_groups=8,
         code_size=10,
         code_weights=[2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
         sync_cls_avg_factor=True,
@@ -259,7 +259,7 @@ lr_config = dict(
     warmup_ratio=1.0 / 3,
     step=[16, 20, 22],
     gamma=0.4)
-total_epochs = 24
+total_epochs = 48
 batch_size = 8
 
 # load pretrained weights
