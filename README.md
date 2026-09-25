@@ -1,4 +1,4 @@
-# PropBEV
+# PQR3D
 
 
 This is the official PyTorch implementation for our paper:
@@ -18,9 +18,9 @@ This is the official PyTorch implementation for our paper:
 | [r50_nuimg_704x256](configs/r50_nuimg_704x256.py) | [nuImg](https://download.openmmlab.com/mmdetection3d/v0.1.0_models/nuimages_semseg/cascade_mask_rcnn_r50_fpn_coco-20e_20e_nuim/cascade_mask_rcnn_r50_fpn_coco-20e_20e_nuim_20201009_124951-40963960.pth) | 24| 12h (8x4090) | 58.2 | -  | [ckpt](https://drive.google.com/file/d/10neIcEoGGkCHWjnFKrQUFDktRaLQUElf/view?usp=drive_link) |[log](https://drive.google.com/file/d/1vZDUW3_WeqBk5esYKQJGbClgEzhbYbmx/view?usp=sharing) |
 | [r101_nuimg_1408x512](configs/r101_nuimg_1408x512.py) | [nuImg](https://download.openmmlab.com/mmdetection3d/v0.1.0_models/nuimages_semseg/cascade_mask_rcnn_r101_fpn_1x_nuim/cascade_mask_rcnn_r101_fpn_1x_nuim_20201024_134804-45215b1e.pth) | 24  | 1d20h (8x4090) | 60.5 | - |  [ckpt](https://drive.google.com/file/d/1T5-kN91FKKw8sT6-9ybEibDBsaqMuZsj/view?usp=sharing) |[log](https://drive.google.com/file/d/1-8cLzHsDefAeWRYzRyULcS4u1P7Phdvx/view?usp=drive_link) |
 | [vov99_dd3d_1600x640](configs/vov99_dd3d_1600x640_trainval_future.py) | [DD3D](https://drive.google.com/file/d/1gQkhWERCzAosBwG5bh2BKkt1k0TJZt-A/view) | 24| 9d12h (8xA100) | 86.5 | -  | -  |[log](https://drive.google.com/file/d/1YJUya94TegYKm8pAcxGJdlTZo16wTT7t/view?usp=drive_link) |
-| [vov99_dd3d_1600x640](configs/vov99_dd3d_1600x640_trainval_future.py) | [DD3D](https://drive.google.com/file/d/1gQkhWERCzAosBwG5bh2BKkt1k0TJZt-A/view) | 36| 14d6h (8xA100) | 87.2 | -  | -  |[log](https://drive.google.com/file/d/1HQv4pan8UfGY27s5jW3nfjNNIO8_chKi/view?usp=sharing) |
+
 | [vit_eva02_1600x640](configs/vit_eva02_1600x640_trainval_future.py) | [EVA02](https://huggingface.co/Yuxin-CV/EVA-02/blob/main/eva02/det/eva02_L_coco_seg_sys_o365.pth) | 24 | 11d17h (8xA100) | 86.2 | -  | -  |[log](https://drive.google.com/file/d/1ucK2Buz0JP2ZVTAqchYOUDJX0I3i4ZwY/view?usp=drive_link) |
-| [vit_eva02_1600x640](configs/vit_eva02_1600x640_trainval_future.py) | [EVA02](https://huggingface.co/Yuxin-CV/EVA-02/blob/main/eva02/det/eva02_L_coco_seg_sys_o365.pth) | 36 | 17d13h(8xA100) | 86.7 | - | -  |[log](https://drive.google.com/file/d/1HQv4pan8UfGY27s5jW3nfjNNIO8_chKi/view?usp=drive_link) |
+
 
 
 
