@@ -12,7 +12,7 @@ from .utils import VERSION
 
 
 @HEADS.register_module()
-class PropBEVHead(DETRHead):
+class PQR3DHead(DETRHead):
     def __init__(self,
                  *args,
                  num_classes,
@@ -34,7 +34,7 @@ class PropBEVHead(DETRHead):
         self.fp16_enabled = False
         self.embed_dims = in_channels
 
-        super(PropBEVHead, self).__init__(num_classes, in_channels, train_cfg=train_cfg, test_cfg=test_cfg, **kwargs)
+        super(PQR3DHead, self).__init__(num_classes, in_channels, train_cfg=train_cfg, test_cfg=test_cfg, **kwargs)
 
         self.code_weights = nn.Parameter(torch.tensor(self.code_weights), requires_grad=False)
         self.bbox_coder = build_bbox_coder(bbox_coder)

@@ -8,7 +8,7 @@ from mmcv.cnn.bricks.transformer import MultiheadAttention, FFN
 from mmdet.models.utils.builder import TRANSFORMER
 from .bbox.utils import decode_bbox
 from .utils import inverse_sigmoid, DUMP
-from .propbev_sampling import sampling_4d, make_sample_points
+from .pqr3d_sampling import sampling_4d, make_sample_points
 from .checkpoint import checkpoint as cp
 from .csrc.wrapper import MSMV_CUDA
 
@@ -51,16 +51,16 @@ class SparseBox3DEncoder(nn.Module):
 
 
 @TRANSFORMER.register_module()
-class PropBEVTransformer(BaseModule):
+class PQR3DTransformer(BaseModule):
     def __init__(self, embed_dims, num_frames=8, num_points=4, num_layers=6, num_levels=4, num_classes=10, code_size=10, pc_range=[], init_cfg=None):
         assert init_cfg is None, 'To prevent abnormal initialization ' \
                             'behavior, init_cfg is not allowed to be set'
-        super(PropBEVTransformer, self).__init__(init_cfg=init_cfg)
+        super(PQR3DTransformer, self).__init__(init_cfg=init_cfg)
 
         self.embed_dims = embed_dims
         self.pc_range = pc_range
 
-        self.decoder = PropBEVTransformerDecoder(embed_dims, num_frames, num_points, num_layers, num_levels, num_classes, code_size, pc_range=pc_range)
+        self.decoder = PQR3DTransformerDecoder(embed_dims, num_frames, num_points, num_layers, num_levels, num_classes, code_size, pc_range=pc_range)
 
     @torch.no_grad()
     def init_weights(self):
@@ -75,14 +75,14 @@ class PropBEVTransformer(BaseModule):
         return cls_scores, bbox_preds, query_feat
 
 
-class PropBEVTransformerDecoder(BaseModule):
+class PQR3DTransformerDecoder(BaseModule):
     def __init__(self, embed_dims, num_frames=8, num_points=4, num_layers=6, num_levels=4, num_classes=10, code_size=10, pc_range=[], init_cfg=None):
-        super(PropBEVTransformerDecoder, self).__init__(init_cfg)
+        super(PQR3DTransformerDecoder, self).__init__(init_cfg)
         self.num_layers = num_layers
         self.pc_range = pc_range
 
         # params are shared across all decoder layers
-        self.decoder_layer = PropBEVTransformerDecoderLayer(
+        self.decoder_layer = PQR3DTransformerDecoderLayer(
             embed_dims, num_frames, num_points, num_levels, num_classes, code_size, pc_range=pc_range
         )
 
@@ -138,9 +138,9 @@ class PropBEVTransformerDecoder(BaseModule):
         return cls_scores, bbox_preds, query_feat
 
 
-class PropBEVTransformerDecoderLayer(BaseModule):
+class PQR3DTransformerDecoderLayer(BaseModule):
     def __init__(self, embed_dims, num_frames=8, num_points=4, num_levels=4, num_classes=10, code_size=10, num_cls_fcs=2, num_reg_fcs=2, pc_range=[], init_cfg=None):
-        super(PropBEVTransformerDecoderLayer, self).__init__(init_cfg)
+        super(PQR3DTransformerDecoderLayer, self).__init__(init_cfg)
 
         self.embed_dims = embed_dims
         self.num_classes = num_classes
@@ -149,8 +149,8 @@ class PropBEVTransformerDecoderLayer(BaseModule):
 
         self.anchor_encoder = SparseBox3DEncoder(embed_dims=[128, 32, 32, 64])
 
-        self.self_attn = PropBEVSelfAttention(embed_dims, num_heads=8, dropout=0.1, pc_range=pc_range)
-        self.sampling = PropBEVSampling(embed_dims, num_frames=num_frames, num_groups=4, num_points=num_points, num_levels=num_levels, pc_range=pc_range)
+        self.self_attn = PQR3DSelfAttention(embed_dims, num_heads=8, dropout=0.1, pc_range=pc_range)
+        self.sampling = PQR3DSampling(embed_dims, num_frames=num_frames, num_groups=4, num_points=num_points, num_levels=num_levels, pc_range=pc_range)
         self.mixing = AdaptiveMixing(in_dim=embed_dims, in_points=num_points * num_frames, n_groups=4, out_points=128)
         self.ffn = FFN(embed_dims, feedforward_channels=512, ffn_drop=0.1)
 
@@ -201,7 +201,7 @@ class PropBEVTransformerDecoderLayer(BaseModule):
 
     def forward(self, query_bbox, query_feat, mlvl_feats, attn_mask, img_metas):
         anchor_embed = self.anchor_encoder(query_bbox)
-        
+
         dn_pad_size = img_metas[0].get('dn_pad_size', 0)
         if dn_pad_size > 0:
             anchor_embed[:, :dn_pad_size, 128:] = 0.0
@@ -225,11 +225,16 @@ class PropBEVTransformerDecoderLayer(BaseModule):
         bbox_pred = self.reg_branch(query_feat)
         bbox_pred = self.refine_bbox(query_bbox, bbox_pred)
 
-        time_diff = img_metas[0]['time_diff']
+        # Convert the predicted displacement into a velocity by dividing by the
+        # time gap to the nearest PAST frame.
+        time_diff = img_metas[0]['time_diff']              # [B, F], > 0 means past
         if time_diff.shape[1] > 1:
-            time_diff = time_diff.clone()
-            time_diff[time_diff < 1e-5] = 1.0
-            bbox_pred[..., 8:] = bbox_pred[..., 8:] / time_diff[:, 1:2, None]
+            NO_PAST = 1e6
+            past_dt = time_diff.clone()
+            past_dt[past_dt < 1e-5] = NO_PAST              # ignore current + future
+            dt = past_dt.min(dim=1, keepdim=True).values   # [B, 1]
+            dt[dt >= NO_PAST] = 1.0                        # scene start: no past frame
+            bbox_pred[..., 8:] = bbox_pred[..., 8:] / dt[..., None]
 
         if DUMP.enabled:
             query_bbox_dec = decode_bbox(query_bbox, self.pc_range)
@@ -242,7 +247,7 @@ class PropBEVTransformerDecoderLayer(BaseModule):
         return query_feat, cls_score, bbox_pred
 
 
-class PropBEVSelfAttention(BaseModule):
+class PQR3DSelfAttention(BaseModule):
     """Scale-adaptive Self Attention"""
     def __init__(self, embed_dims=256, num_heads=8, dropout=0.1, pc_range=[], init_cfg=None):
         super().__init__(init_cfg)
@@ -297,7 +302,7 @@ class PropBEVSelfAttention(BaseModule):
         return dist
 
 
-class PropBEVSampling(BaseModule):
+class PQR3DSampling(BaseModule):
     """Adaptive Spatio-temporal Sampling"""
     def __init__(self, embed_dims=256, num_frames=4, num_groups=4, num_points=8, num_levels=4, pc_range=[], init_cfg=None):
         super().__init__(init_cfg)

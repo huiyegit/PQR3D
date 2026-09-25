@@ -232,8 +232,21 @@ class _OSA_module(nn.Module):
         return xt
 
     def forward(self, x):
-        if self.with_cp and self.training and x.requires_grad:
-            return cp.checkpoint(self._forward, x)
+        # Gate on whether THIS module needs a gradient, not on whether its input
+        # does. frozen_stages=1 freezes the stem AND stage2, so stage3's first
+        # OSA module gets x.requires_grad=False while its own weights are
+        # trainable -- the old condition skipped checkpointing exactly there, at
+        # the highest resolution of any trainable stage, and stored every
+        # internal activation (120 MB/image at 80x200, ~11 GiB over 102 images).
+        #
+        # use_reentrant=False is REQUIRED: the reentrant variant raises
+        # "element 0 of tensors does not require grad" on a non-grad input.
+        #
+        # Recompute is exact: no dropout here, and norm_eval=True keeps every
+        # BatchNorm in eval mode, so gradients are bit-identical.
+        if self.with_cp and self.training and (
+                x.requires_grad or any(p.requires_grad for p in self.parameters())):
+            return cp.checkpoint(self._forward, x, use_reentrant=False)
         else:
             return self._forward(x)
 
