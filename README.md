@@ -67,7 +67,7 @@ python setup.py build_ext --inplace
 ## Prepare Dataset
 
 1. Download nuScenes from [https://www.nuscenes.org/nuscenes](https://www.nuscenes.org/nuscenes) and put it in `data/nuscenes`.
-2. Download the generated info file from [Google Drive](https://drive.google.com/drive/folders/1UXqE0ysvxlqXudBt7aCZ0JHRhDwGC2uQ?usp=drive_link).
+2. Download the generated info file from [Google Drive](https://drive.google.com/drive/folders/1E3OSuQiTjkVQ8b3iuG1ZyzmNHw-j2QAC?usp=share_link).
 3. Folder structure:
 
 ```
