@@ -2,7 +2,8 @@
 
 
 This is the official PyTorch implementation for our paper:
-**PQR3D: Progressive Query Refinement over Reference-Conditioned Temporal Windows for Multi-View 3D Object Detection**[arXiv:2609.32163](https://arxiv.org/abs/2609.32163)
+
+**PQR3D: Progressive Query Refinement over Reference-Conditioned Temporal Windows for Multi-View 3D Object Detection**  [arXiv:2609.32163](https://arxiv.org/abs/2609.32163)
 
 
 ## News
