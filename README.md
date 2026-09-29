@@ -7,7 +7,7 @@ This is the official PyTorch implementation for our paper:
 
 
 ## News
-
+* 2026-09-29: We release the arXiv version [arXiv:2609.32163](https://arxiv.org/abs/2609.32163).
 * 2026-09-25: We release the source code and pretrained weights.
 
 
